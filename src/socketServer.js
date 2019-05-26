@@ -127,6 +127,13 @@ class PrompterServer {
 			process.stdout.write(chunk);
 			this.midiParserService.parse(chunk);
 		});
+		console.log('connected', this.midiListenerProcess);
+		Object.values(this.clients).map(client => client.send(JSON.stringify({
+			type: 'MIDI_CONNECTED',
+			payload: {
+				connectionId: message.payload
+			}
+		})));
 	}
 	processCommandListConnections({socketId, message}) {
 		console.log(socketId, message);
