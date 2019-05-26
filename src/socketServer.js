@@ -64,6 +64,12 @@ class PrompterServer {
 						message
 					});
 					break;
+				case 'DISCONNECT':
+					this.processCommandDisconnect({
+						socketId: id,
+						message
+					});
+					break;
 				default:
 					console.log('Unexpected message: ', message);
 					break;
@@ -136,6 +142,15 @@ class PrompterServer {
 		this.midiListenerProcess.stdout.on('data', chunk => {
 			this.midiParserService.parse(chunk);
 		});
+		this.midiListenerProcess.on('close', (code) => {
+			console.log(`child process exited with code ${code}`);
+			Object.values(this.clients).map(client => client.send(JSON.stringify({
+				type: 'DISCONNECTED',
+				payload: {
+					connectionId: message.payload
+				}
+			})));
+		});
 		console.log('connected', this.midiListenerProcess);
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
 			type: 'MIDI_CONNECTED',
@@ -143,6 +158,21 @@ class PrompterServer {
 				connectionId: message.payload
 			}
 		})));
+	}
+	processCommandDisconnect({socketId, message}){
+		if(!this.midiListenerProcess){
+			return this.clients[socketId].send(JSON.stringify({
+				type: 'ERROR',
+				payload: 'No active connections found'
+			}));
+		}
+		if(this.midiListenerProcess.spawnargs[1].replace('-p', '') != message.payload){
+			return this.clients[socketId].send(JSON.stringify({
+				type: 'ERROR',
+				payload: 'Incorrect active connection id'
+			}));
+		}
+		this.midiListenerProcess.disconnect();
 	}
 	processCommandListConnections({socketId, message}) {
 		const child = spawnSync('amidi', ['-l']);
