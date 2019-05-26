@@ -137,6 +137,7 @@ class PrompterServer {
 				connections[port] = data.join(' ');
 				return connections;
 			}, {});
+		delete connections['undefined'];
 		this.clients[socketId].send(JSON.stringify({
 			type: 'LIST_CONNECTIONS_RESPONSE',
 			payload: connections
