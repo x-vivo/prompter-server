@@ -78,6 +78,13 @@ class PrompterServer {
 			type: 'REQUEST_ID'
 		}));
 
+		if(this.midiListenerProcess && this.midiListenerProcess.spawnargs && this.midiListenerProcess.spawnargs[1])
+		this.clients[id].send(JSON.stringify({
+			type: 'MIDI_CONNECTED',
+			payload: {
+				connectionId: this.midiListenerProcess.spawnargs[1].replace('-p', '')
+			}
+		}));
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
 			type: 'CLIENT_LIST',
 			payload: Object.keys(this.clients)
