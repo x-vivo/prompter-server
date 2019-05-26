@@ -1,0 +1,36 @@
+{
+	"name": "socket-server",
+	"description": "platform",
+	"version": "1.0.0",
+	"private": true,
+	"author": "zedd malam<zedd.malam@gmail.com>",
+	"repository": {},
+	"engines": {
+		"node": "latest",
+		"npm": "latest"
+	},
+	"scripts": {
+		"start": "nodemon --exec babel-node src/socketServer.js",
+		"build": "babel src --out-dir dist",
+		"serve": "node dist/server.js"
+	},
+	"dependencies": {
+		"body-parser": "latest",
+		"cookie-parser": "latest",
+		"errorhandler": "latest",
+		"express": "latest",
+		"midi-parser-js": "^4.0.0",
+		"moment": "latest",
+		"morgan": "latest",
+		"node-schedule": "latest",
+		"node-uuid": "latest",
+		"ws": "^7.0.0"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.4.4",
+		"@babel/core": "^7.4.5",
+		"@babel/node": "^7.4.5",
+		"@babel/preset-env": "^7.4.5",
+		"nodemon": "^1.19.1"
+	}
+}
