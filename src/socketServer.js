@@ -95,8 +95,8 @@ class PrompterServer {
 				if(!message.payload){
 					message.payload = {};
 				}
-				const clap = (Math.floor(this.timingClockOffset / this.ticksPerClap) + 1) % 4;
-				message.payload.clap = !clap ? 4 : clap;
+				const clap = Math.floor(this.timingClockOffset / this.ticksPerClap) + 1;
+				message.payload.clap = !clap % 4 ? 4 : clap % 4;
 				message.payload.bar = Math.floor(clap / 4);
 			}
 			if(!message.payload){
