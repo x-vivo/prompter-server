@@ -154,7 +154,7 @@ class PrompterServer {
 				}
 			})));
 		});
-		console.log('connected', this.midiListenerProcess);
+		this.midiListenerProcess.stderr.on('data', data => console.log(`amidi stderr: ${data}`));
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
 			type: 'MIDI_CONNECTED',
 			payload: {
