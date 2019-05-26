@@ -172,7 +172,7 @@ class PrompterServer {
 				payload: 'Incorrect active connection id'
 			}));
 		}
-		this.midiListenerProcess.disconnect();
+		this.midiListenerProcess.kill();
 	}
 	processCommandListConnections({socketId, message}) {
 		const child = spawnSync('amidi', ['-l']);
