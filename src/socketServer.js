@@ -84,8 +84,7 @@ class PrompterServer {
 			type: 'REQUEST_ID'
 		}));
 
-		if(this.midiListenerProcess && this.midiListenerProcess.spawnargs && this.midiListenerProcess.spawnargs[1]){
-			console.log('MIDI_CONNECTED', this.midiListenerProcess);
+		if(this.midiListenerProcess && this.midiListenerProcess.connected && this.midiListenerProcess.spawnargs && this.midiListenerProcess.spawnargs[1]){
 			this.clients[id].send(JSON.stringify({
 				type: 'MIDI_CONNECTED',
 				payload: {
