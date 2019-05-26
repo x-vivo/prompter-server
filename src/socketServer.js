@@ -12,7 +12,7 @@ class PrompterServer {
 		this.callTimeout = 20000;
 		this.callPingInterval = 10;
 		this.midiParserService = new MidiParserService({
-			onMessage = message => this.processMidi(message)
+			onMessage: message => this.processMidi(message)
 		});
 		this.midiListenerProcess;
 		
@@ -95,6 +95,7 @@ class PrompterServer {
 	processCommandConnect({socketId, message}){
 		this.midiListenerProcess = spawn('amidi', [`-p${message.payload}`, '-d']);
 		this.midiListenerProcess.stdout.on('data', chunk => {
+			process.stdout.write(chunk);
 			this.midiParserService.parse(chunk);
 		});
 	}
