@@ -124,7 +124,6 @@ class PrompterServer {
 	processCommandConnect({socketId, message}){
 		this.midiListenerProcess = spawn('amidi', [`-p${message.payload}`, '-d']);
 		this.midiListenerProcess.stdout.on('data', chunk => {
-			process.stdout.write(chunk);
 			this.midiParserService.parse(chunk);
 		});
 		console.log('connected', this.midiListenerProcess);
@@ -136,7 +135,6 @@ class PrompterServer {
 		})));
 	}
 	processCommandListConnections({socketId, message}) {
-		console.log(socketId, message);
 		const child = spawnSync('amidi', ['-l']);
 		const [header, ...connectionsData] = new String(child.stdout).split('\n');
 		const connections = connectionsData.reduce((connections, connectionData) => {
