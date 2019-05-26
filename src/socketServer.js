@@ -97,6 +97,7 @@ class PrompterServer {
 				}
 				const clap = (Math.floor(this.timingClockOffset / this.ticksPerClap) + 1) % 4;
 				message.payload.clap = !clap ? 4 : clap;
+				message.payload.bar = Math.floor(clap / 4);
 			}
 			if(!message.payload){
 				broadcastMessage = undefined;
@@ -112,7 +113,7 @@ class PrompterServer {
 		}
 
 
-		if(!broadcastMessage || message.type === 'STOP'){
+		if(!broadcastMessage || this.songStatus === 'STOP'){
 			return;
 		}
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
