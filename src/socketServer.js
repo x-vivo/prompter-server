@@ -145,7 +145,7 @@ class PrompterServer {
 		this.midiListenerProcess.on('close', (code) => {
 			console.log(`child process exited with code ${code}`);
 			Object.values(this.clients).map(client => client.send(JSON.stringify({
-				type: 'DISCONNECTED',
+				type: 'MIDI_DISCONNECTED',
 				payload: {
 					connectionId: message.payload
 				}
