@@ -12,9 +12,13 @@ class PrompterServer {
 		this.callTimeout = 20000;
 		this.callPingInterval = 10;
 		this.midiParserService = new MidiParserService({
-			onMessage = message => this.processMidi(message)
+			onMessage: message => this.processMidi(message)
 		});
 		this.midiListenerProcess;
+		this.timingClockOffset = 0;
+		this.songStatus = 'STOP';
+		this.songTimeSignature = '4/4';
+		this.ticksPerClap = 24;
 		
 		this.webSocketServer = new ws.Server({
 			port: PORT
@@ -84,7 +88,30 @@ class PrompterServer {
 		console.log(options);
 	};
 	processMidi(message){
+		let broadcastMessage = message;
 		if(message.type === 'TIMING_CLOCK'){
+			this.timingClockOffset ++;
+			if(this.timingClockOffset % this.ticksPerClap === 1){
+				if(!message.payload){
+					message.payload = {};
+				}
+				message.payload.clap = (Math.floor(this.timingClockOffset / this.ticksPerClap) + 1) % 4;
+			}
+			if(!message.payload){
+				broadcastMessage = undefined;
+			}
+		}
+		if(message.type === 'START'){
+			this.songStatus = 'PLAY';
+			this.timingClockOffset = 0;
+		}
+		if(message.type === 'STOP'){
+			this.songStatus = 'STOP';
+			this.timingClockOffset = 0;
+		}
+
+
+		if(!broadcastMessage || message.type === 'STOP'){
 			return;
 		}
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
@@ -95,6 +122,7 @@ class PrompterServer {
 	processCommandConnect({socketId, message}){
 		this.midiListenerProcess = spawn('amidi', [`-p${message.payload}`, '-d']);
 		this.midiListenerProcess.stdout.on('data', chunk => {
+			process.stdout.write(chunk);
 			this.midiParserService.parse(chunk);
 		});
 	}
