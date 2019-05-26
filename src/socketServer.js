@@ -107,7 +107,7 @@ class PrompterServer {
 		if(message.type === 'TIMING_CLOCK'){
 			this.timingClockOffset ++;
 
-			if(this.timingClockOffset % 6 === 1){
+			if(this.timingClockOffset % 6 === 1 && this.songStatus === 'PLAYING'){
 				Object.values(this.clients).map(client => client.send(`F${(Math.floor(this.timingClockOffset / 6) + 1) % 16 + 1}`));
 			}
 
@@ -124,7 +124,7 @@ class PrompterServer {
 			}
 		}
 		if(message.type === 'START'){
-			this.songStatus = 'PLAY';
+			this.songStatus = 'PLAYING';
 			this.timingClockOffset = 0;
 		}
 		if(message.type === 'STOP'){
@@ -132,7 +132,6 @@ class PrompterServer {
 			this.timingClockOffset = 0;
 		}
 
-		console.log('broadcastMessage', broadcastMessage, 'this.songStatus', this.songStatus);
 		if(!broadcastMessage || this.songStatus === 'STOP'){
 			return;
 		}
