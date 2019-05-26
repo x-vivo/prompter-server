@@ -102,7 +102,7 @@ class PrompterServer {
 			}
 		}
 		if(message.type === 'START'){
-			this.songStatus = 'START';
+			this.songStatus = 'PLAY';
 			this.timingClockOffset = 0;
 		}
 		if(message.type === 'STOP'){
@@ -111,7 +111,7 @@ class PrompterServer {
 		}
 
 
-		if(!broadcastMessage){
+		if(!broadcastMessage || message.type === 'STOP'){
 			return;
 		}
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
