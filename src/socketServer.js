@@ -106,9 +106,11 @@ class PrompterServer {
 		let broadcastMessage = message;
 		if(message.type === 'TIMING_CLOCK'){
 			this.timingClockOffset ++;
+
 			if(this.timingClockOffset % 6 === 1){
 				Object.values(this.clients).map(client => client.send(`F${(Math.floor(this.timingClockOffset / 6) + 1) % 16 + 1}`));
 			}
+
 			if(this.timingClockOffset % this.ticksPerClap === 1){
 				if(!message.payload){
 					message.payload = {};
@@ -130,7 +132,7 @@ class PrompterServer {
 			this.timingClockOffset = 0;
 		}
 
-
+		console.log('broadcastMessage', broadcastMessage, 'this.songStatus', this.songStatus);
 		if(!broadcastMessage || this.songStatus === 'STOP'){
 			return;
 		}
