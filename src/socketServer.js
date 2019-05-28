@@ -64,6 +64,12 @@ class PrompterServer {
 						message
 					});
 					break;
+				case 'DISCONNECT':
+					this.processCommandDisconnect({
+						socketId: id,
+						message
+					});
+					break;
 				default:
 					console.log('Unexpected message: ', message);
 					break;
@@ -78,6 +84,15 @@ class PrompterServer {
 			type: 'REQUEST_ID'
 		}));
 
+		if(this.midiListenerProcess && this.midiListenerProcess.connected && this.midiListenerProcess.spawnargs && this.midiListenerProcess.spawnargs[1]){
+			this.clients[id].send(JSON.stringify({
+				type: 'MIDI_CONNECTED',
+				payload: {
+					connectionId: this.midiListenerProcess.spawnargs[1].replace('-p', '')
+				}
+			}));
+		}
+
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
 			type: 'CLIENT_LIST',
 			payload: Object.keys(this.clients)
@@ -91,18 +106,25 @@ class PrompterServer {
 		let broadcastMessage = message;
 		if(message.type === 'TIMING_CLOCK'){
 			this.timingClockOffset ++;
+
+			if(this.timingClockOffset % 6 === 1 && this.songStatus === 'PLAYING'){
+				Object.values(this.clients).map(client => client.send(`F${(Math.floor(this.timingClockOffset / 6) + 1) % 16 + 1}`));
+			}
+
 			if(this.timingClockOffset % this.ticksPerClap === 1){
 				if(!message.payload){
 					message.payload = {};
 				}
-				message.payload.clap = (Math.floor(this.timingClockOffset / this.ticksPerClap) + 1) % 4;
+				const clap = Math.floor(this.timingClockOffset / this.ticksPerClap) + 1;
+				message.payload.clap = (clap % 4) + 1;
+				message.payload.bar = Math.floor(clap / 4);
 			}
 			if(!message.payload){
 				broadcastMessage = undefined;
 			}
 		}
 		if(message.type === 'START'){
-			this.songStatus = 'PLAY';
+			this.songStatus = 'PLAYING';
 			this.timingClockOffset = 0;
 		}
 		if(message.type === 'STOP'){
@@ -110,8 +132,7 @@ class PrompterServer {
 			this.timingClockOffset = 0;
 		}
 
-
-		if(!broadcastMessage || message.type === 'STOP'){
+		if(!broadcastMessage || this.songStatus === 'STOP'){
 			return;
 		}
 		Object.values(this.clients).map(client => client.send(JSON.stringify({
@@ -122,12 +143,41 @@ class PrompterServer {
 	processCommandConnect({socketId, message}){
 		this.midiListenerProcess = spawn('amidi', [`-p${message.payload}`, '-d']);
 		this.midiListenerProcess.stdout.on('data', chunk => {
-			process.stdout.write(chunk);
 			this.midiParserService.parse(chunk);
 		});
+		this.midiListenerProcess.on('close', (code) => {
+			console.log(`child process exited with code ${code}`);
+			Object.values(this.clients).map(client => client.send(JSON.stringify({
+				type: 'MIDI_DISCONNECTED',
+				payload: {
+					connectionId: message.payload
+				}
+			})));
+		});
+		this.midiListenerProcess.stderr.on('data', data => console.log(`amidi stderr: ${data}`));
+		Object.values(this.clients).map(client => client.send(JSON.stringify({
+			type: 'MIDI_CONNECTED',
+			payload: {
+				connectionId: message.payload
+			}
+		})));
+	}
+	processCommandDisconnect({socketId, message}){
+		if(!this.midiListenerProcess){
+			return this.clients[socketId].send(JSON.stringify({
+				type: 'ERROR',
+				payload: 'No active connections found'
+			}));
+		}
+		if(this.midiListenerProcess.spawnargs[1].replace('-p', '') != message.payload){
+			return this.clients[socketId].send(JSON.stringify({
+				type: 'ERROR',
+				payload: 'Incorrect active connection id'
+			}));
+		}
+		this.midiListenerProcess.kill();
 	}
 	processCommandListConnections({socketId, message}) {
-		console.log(socketId, message);
 		const child = spawnSync('amidi', ['-l']);
 		const [header, ...connectionsData] = new String(child.stdout).split('\n');
 		const connections = connectionsData.reduce((connections, connectionData) => {
@@ -135,6 +185,7 @@ class PrompterServer {
 				connections[port] = data.join(' ');
 				return connections;
 			}, {});
+		delete connections['undefined'];
 		this.clients[socketId].send(JSON.stringify({
 			type: 'LIST_CONNECTIONS_RESPONSE',
 			payload: connections

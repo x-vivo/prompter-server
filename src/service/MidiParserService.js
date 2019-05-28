@@ -11,6 +11,10 @@ export default class MidiParserService {
 	parseMessage(message){
 		const byte = message.shift();
 		switch (byte){
+			case 242:// Song Position Pointer
+				console.log('SPP', message);
+				this.onMessage({type:'SPP'});
+				break;
 			case 248:
 				this.onMessage({type:'TIMING_CLOCK'});
 				break;
