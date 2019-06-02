@@ -108,7 +108,7 @@ class PrompterServer {
 			this.timingClockOffset ++;
 
 			if(this.timingClockOffset % 6 === 1 && this.songStatus === 'PLAYING'){
-				Object.values(this.clients).map(client => client.send(`F${(Math.floor(this.timingClockOffset / 6) + 1) % 16 + 1}`));
+				Object.values(this.clients).map(client => client.send(String.fromCharCode((Math.floor(this.timingClockOffset / 6) + 1) % 16 + 1)));
 			}
 
 			if(this.timingClockOffset % this.ticksPerClap === 1){
